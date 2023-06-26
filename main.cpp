@@ -161,7 +161,12 @@ int main(int argc, const char * argv[]) {
         for(auto &temp_sent : AllSentence) {
             //store tf
             for (auto &temp : AllKeyword) {
-                temp.tf = temp_sent.tf.at(temp.query);
+                try {
+                    temp.tf = temp_sent.tf.at(temp.query);
+                } catch (const out_of_range& e) {
+                    temp.tf = 0;
+                }
+                //problem
             }
             //find topk idf*tf
             priority_queue<Query, vector<Query>, compforidf> topidf;
