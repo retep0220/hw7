@@ -60,8 +60,12 @@ struct CompElement {
 };
 
 struct compforidf {
+    unordered_map<string, int>& stored_idf;
+    
+    compforidf(unordered_map<string, int>& idf) : stored_idf(idf) {}
+    
     bool operator() (const string &a, const string &b) {
-        extern unordered_map<string, double> stored_idf;
+        //extern unordered_map<string, double> stored_idf;
         
         return stored_idf.at(a) < stored_idf.at(b);
         
