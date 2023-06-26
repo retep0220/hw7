@@ -27,6 +27,12 @@ public:
     int word_num = 0;
 };
 
+struct Query {
+    string query;
+    double idf;
+    double tf;
+};
+
 vector<string> tokenizer (string str) {
     vector<string> tokens;
     stringstream ss(str);
@@ -60,15 +66,11 @@ struct CompElement {
 };
 
 struct compforidf {
-    unordered_map<string, int>& stored_idf;
-    
-    compforidf(unordered_map<string, int>& idf) : stored_idf(idf) {}
-    
-    bool operator() (const string &a, const string &b) {
-        //extern unordered_map<string, double> stored_idf;
-        
-        return stored_idf.at(a) < stored_idf.at(b);
-        
+    bool operator() (const Query &a, const Query &b) {
+        if (a.idf != b.idf) {
+            return a.idf < b.idf;
+        }
+        return a.tf < b.tf;
     }
 };
 
@@ -144,35 +146,38 @@ int main(int argc, const char * argv[]) {
             }
         }
         
+        vector<Query> AllKeyword;
         
+        for (auto &str : keywords) {
+            Query tempquery;
+            tempquery.query = str;
+            tempquery.idf = stored_idf.at(str);
+            AllKeyword.push_back(tempquery);
+        }
         
         //store idf_sum in allsen
         //to be edited
         //find topk idf
         for(auto &temp_sent : AllSentence) {
-            
-            priority_queue<string, vector<string>, compforidf> topkidf;
-            for (auto &str : keywords) {
-                if (topkidf.size() < k) {
-                    topkidf.push(str);
+            //store tf
+            for (auto &temp : AllKeyword) {
+                temp.tf = temp_sent.tf.at(temp.query);
+            }
+            //find topk idf*tf
+            priority_queue<Query, vector<Query>, compforidf> topidf;
+            for (auto &temp : AllKeyword) {
+                if (topidf.size() < k) {
+                    topidf.push(temp);
                 }
-                else {
-                    if (stored_idf.at(topkidf.top()) < stored_idf.at(str)) {
-                        topkidf.push(str);
-                        topkidf.pop();
-                    }
-                    else if (stored_idf.at(topkidf.top()) == stored_idf.at(str)) {
-                        if (temp_sent.tf.at(str) > temp_sent.tf.at(topkidf.top())) {
-                            topkidf.pop();
-                            topkidf.push(str);
-                        }
-                    }
+                else if (topidf.top().idf <= temp.idf) {
+                    topidf.push(temp);
+                    topidf.pop();
                 }
             }
-            //sum idf*tf
-            for (int i = 0; i < 3; i++) {
-                temp_sent.idf += (stored_idf.at(topkidf.top()) * temp_sent.tf.at(topkidf.top()));
-                topkidf.pop();
+            //sum rank
+            for (int i = 0; i < k; i++) {
+                temp_sent.idf += (topidf.top().idf * topidf.top().tf);
+                topidf.pop();
             }
         }
         
