@@ -14,6 +14,7 @@
 #include "istream"
 #include <vector>
 #include "queue"
+#include "math.h"
 
 using namespace std;
 
@@ -60,7 +61,7 @@ struct CompElement {
 
 struct compforidf {
     bool operator() (const string &a, const string &b) {
-        extern unordered_map<string, int> stored_idf;
+        extern unordered_map<string, double> stored_idf;
         
         return stored_idf.at(a) < stored_idf.at(b);
         
@@ -113,7 +114,7 @@ int main(int argc, const char * argv[]) {
     vector<string> keywords;
     ifstream queryFile(argv[2]);
     string query;
-    static unordered_map<string, int> stored_idf;
+    static unordered_map<string, double> stored_idf;
     while (getline(queryFile,query)) {
         keywords = tokenizer(query);
         for (auto &str : keywords) {
@@ -135,7 +136,7 @@ int main(int argc, const char * argv[]) {
                         appear_count++;
                     }
                 }
-                stored_idf[str] = log((double)total_words/(double)appear_count);
+                stored_idf[str] = log10((double)total_words/(double)appear_count);
             }
         }
         
